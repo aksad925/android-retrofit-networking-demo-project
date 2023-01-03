@@ -6,31 +6,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import com.mindorks.bootcamp.demo.MyApplication
 import com.mindorks.bootcamp.demo.R
+import com.mindorks.bootcamp.demo.di.component.ActivityComponent
 import com.mindorks.bootcamp.demo.di.component.DaggerActivityComponent
 import com.mindorks.bootcamp.demo.di.module.ActivityModule
+import com.mindorks.bootcamp.demo.ui.base.BaseActivity
 import com.mindorks.bootcamp.demo.ui.home.HomeFragment
+import kotlinx.android.synthetic.main.activity_main.*
 import javax.inject.Inject
 
-class MainActivity : AppCompatActivity() {
-
-    @Inject
-    lateinit var viewModel: MainViewModel
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        getDependencies()
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        val tvData = findViewById<TextView>(R.id.tv_message)
-
-        viewModel.dummies.observe(this, Observer {
-            tvData.text = it.toString()
-        })
-
-        viewModel.getDummies()
-
-        addHomeFragment()
-    }
+class MainActivity : BaseActivity<MainViewModel>() {
 
     private fun addHomeFragment() {
         if (supportFragmentManager.findFragmentByTag(HomeFragment.TAG) == null) {
@@ -41,12 +25,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun getDependencies() {
-        DaggerActivityComponent
-                .builder()
-                .applicationComponent((application as MyApplication).applicationComponent)
-                .activityModule(ActivityModule(this))
-                .build()
-                .inject(this)
+    override fun setupObservers() {
+        super.setupObservers()
+        viewModel.data.observe(this, Observer {
+            tv_message.text = it
+        })
+    }
+    override fun provideLayoutId(): Int = R.layout.activity_main
+
+    override fun setUpViews(savedInstanceState: Bundle?) {
+        addHomeFragment()
+    }
+
+    override fun injectDependencies(activityComponent: ActivityComponent) {
+        activityComponent.inject(this)
     }
 }

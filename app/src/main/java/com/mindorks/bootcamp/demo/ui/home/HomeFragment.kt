@@ -6,13 +6,17 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import com.mindorks.bootcamp.demo.MyApplication
 import com.mindorks.bootcamp.demo.R
 import com.mindorks.bootcamp.demo.di.component.DaggerFragmentComponent
+import com.mindorks.bootcamp.demo.di.component.FragmentComponent
 import com.mindorks.bootcamp.demo.di.module.FragmentModule
+import com.mindorks.bootcamp.demo.ui.base.BaseFragment
+import kotlinx.android.synthetic.main.fragment_home.*
 import javax.inject.Inject
 
-class HomeFragment : Fragment() {
+class HomeFragment : BaseFragment<HomeViewModel>() {
 
     companion object {
 
@@ -26,33 +30,19 @@ class HomeFragment : Fragment() {
         }
     }
 
-    @Inject
-    lateinit var viewModel: HomeViewModel
+    override fun provideLayoutId(): Int = R.layout.fragment_home
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        getDependencies()
-        super.onCreate(savedInstanceState)
+    override fun setUpViews(view: View) {
+
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_home, container, false)
+    override fun setupObservers() {
+        super.setupObservers()
+        viewModel.data.observe(this, Observer {
+            tv_message.text = it
+        })
     }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        val tvMessage = view.findViewById<TextView>(R.id.tv_message)
-        tvMessage.text = viewModel.someData
+    override fun injectDependencies(fragmentComponent: FragmentComponent) {
+      fragmentComponent.inject(this)
     }
-
-    private// to suppress null pointer exception warning
-    fun getDependencies() {
-        DaggerFragmentComponent
-                .builder()
-                .applicationComponent((context!!
-                        .applicationContext as MyApplication).applicationComponent)
-                .fragmentModule(FragmentModule(this)) // this is shown as deprecated as no instance provided by it is being injected
-                .build()
-                .inject(this)
-    }
-
 }
